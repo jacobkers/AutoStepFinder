@@ -45,7 +45,7 @@ md"""
 
 # ╔═╡ 40b08f2f-2bfd-4601-9ae5-18b199fce144
 md"""
-This notebook takes data from a field on a sample and the ROI selected in the spectrum analysis (notebooks 1 and 2). Then, it processes the data inside the ROI (binning and deconvolve functions, chosen by the user), applies AutoStepFinder in the arrays containing the temporal evolution of every pixel inside the ROI and stores the results, that can be processed together with other fields with notebook 4.
+This notebook takes data from a field on a sample and the ROI selected in the spectrum analysis (notebook 1). Then, it processes the data inside the ROI (binning and deconvolve functions, chosen by the user), applies AutoStepFinder in the arrays containing the temporal evolution of every pixel inside the ROI and stores the results, that can be processed together with other fields with notebook 3.
 """
 
 # ╔═╡ 78f03196-450c-4c51-afc3-5a664b81fef3
@@ -55,29 +55,29 @@ md"""
 
 # ╔═╡ 737287f7-f3a5-454b-9b02-0d87ed5d2f8b
 md"""
-Select the SAMPLE to study
+Select the location of the SAMPLE to study (not the field):
 """
+
+# ╔═╡ 854a1826-13de-4a80-883f-675413a630a6
+folder_sample = raw"C:\Users\Alfonso\BOLD\WideField\Data\april_2024\57"
 
 # ╔═╡ 5b03b13c-a813-4916-b13e-08413b370670
 begin
-	folder_sample = raw"C:\Users\Alfonso\BOLD\WideField\Data\april_2024\57"
 	filenames_all = readdir(joinpath(folder_sample, "PB"))
+	filenames_filtered = filter(filename -> startswith(filename, "Field"), filenames_all)
 end;
 
 # ╔═╡ d1a0bd8f-f373-4df5-824a-254460657f79
 md"""
-Select the FIELD to analyze from the list
+Select the FIELD to analyze from the list:
 """
 
 # ╔═╡ 1ba10129-eb26-443e-b436-d72cf28e3793
-@bind field_number Select(filenames_all)
-
-# ╔═╡ 4c3c55ac-3ab2-442c-9e7f-8aed53a6a874
-typeof(field_number)
+@bind field_number Select(filenames_filtered)
 
 # ╔═╡ 75ea8ed5-4bc0-41f1-9b18-c3e4ad8f1b83
 md"""
-Introduce the acquisition rate for the photobleaching curve (time between frame acquisition in SECONDS)
+Introduce the acquisition rate for the photobleaching curve (time between frame acquisition in SECONDS):
 """
 
 # ╔═╡ 40d8b473-96c1-4952-afe8-583cabcb2e7c
@@ -85,7 +85,7 @@ Introduce the acquisition rate for the photobleaching curve (time between frame 
 
 # ╔═╡ 18231a39-2bd9-4bef-b443-05f7261acb88
 md"""
-Select maximum number of active pixels to store (to avoid overloading)
+Select maximum number of active pixels to store (to avoid overloading):
 """
 
 # ╔═╡ 3891abd0-8802-4944-ae74-f13f42e2f12a
@@ -93,7 +93,7 @@ Select maximum number of active pixels to store (to avoid overloading)
 
 # ╔═╡ 2e0da7f9-e4ee-43a4-a746-4a8be8d60a5b
 md"""
-Select the threshold value for AutoStepFinder algorithm
+Select the threshold value (TresH) for AutoStepFinder algorithm:
 """
 
 # ╔═╡ ba6ed8fe-b97b-41b8-9e10-ea0e85aa50ab
@@ -101,11 +101,21 @@ Select the threshold value for AutoStepFinder algorithm
 
 # ╔═╡ 95c930a5-84ba-4670-a0b9-ab145751ad0a
 md"""
-Select the number of iterations for AutoStepFinder
+Select the number of iterations (N_iter) for AutoStepFinder:
 """
 
 # ╔═╡ 43dc348a-3896-4e48-b4eb-44983f200006
 @bind N_iter_string TextField(default = "50")
+
+# ╔═╡ 4ed4288f-d077-4fd0-af75-29a4d823f254
+md"""
+Check to analyze all images of field (time consuming) and store results: $(@bind temp_evol CheckBox())
+"""
+
+# ╔═╡ 5481b4eb-bd28-4700-ad34-7c425c08b014
+md"""
+Check to store the trajectories of all active pixels: $(@bind store_trajectories CheckBox())
+"""
 
 # ╔═╡ 3bc06e36-0692-4f85-83f8-a1a38c0d9ace
 md"""
@@ -116,7 +126,7 @@ md"""
 begin
 	tresH = parse(Float64, tresH_string)
 	N_iter = parse(Float64, N_iter_string)
-	folder_data = joinpath(folder_sample, "PB", field_number);
+	folder_data = joinpath(folder_sample, "PB", field_number)
 end;
 
 # ╔═╡ 6adf724f-73ad-424d-a0cb-2869ce73c3d8
@@ -163,11 +173,6 @@ md"""
 # Sets of frames analysis. Statistics
 """
 
-# ╔═╡ bdc51e2e-21e9-404d-84de-bd776192ecae
-md"""
-Check to analyze all images of field (time consuming) and store results: $(@bind temp_evol CheckBox())
-"""
-
 # ╔═╡ a189b589-cc79-4736-a345-0a3d28f23cca
 md"""
 # Pixel trajectories (individual and average)
@@ -194,11 +199,6 @@ md"""
 # ╔═╡ ca58450a-8f5b-4b48-8dff-f370a7d640f9
 md"""
 ##### Creation of the results folder (if not existent) and storage of results
-"""
-
-# ╔═╡ 736e550f-31ad-403f-b745-9c8b57c99f73
-md"""
-Check to store the trajectories of all active pixels: $(@bind store_trajectories CheckBox())
 """
 
 # ╔═╡ 21e6bd2b-ee27-4db4-aa5f-09e95deab2c4
@@ -595,17 +595,17 @@ plots_active_pixels[1]
 
 # ╔═╡ 9af3cd4e-a16c-4f09-949d-5ac515e2f327
 if store_trajectories
-	for i in 1:length(plots_active_pixels)
-		subplot = plot(plots_active_pixels[i])
-		savefig(joinpath(directory_trajectories, "Pixel_$i.png"))
+	for ii in 1:length(plots_active_pixels)
+		subplot = plot(plots_active_pixels[ii])
+		savefig(joinpath(directory_trajectories, "Pixel_$ii.png"))
 		
 	end
 	#Pixel trajectory to store in txt file
 	for pixel in 1:size(results_array[4])[1]
-		i = results_array[4][pixel, 1]
-		j = results_array[4][pixel, 2]
-		pixel_trajectory = [temporal_evolution[k][j, i] for k in 1:length(temporal_evolution)]
-		txt_filename = joinpath(directory_trajectories, "Pixel_$(i)_$j.txt")
+		ii = results_array[4][pixel, 1]
+		jj = results_array[4][pixel, 2]
+		pixel_trajectory = [temporal_evolution[kk][jj, ii] for kk in 1:length(temporal_evolution)]
+		txt_filename = joinpath(directory_trajectories, "Pixel_$(ii)_$jj.txt")
 		open(txt_filename, "w") do file
 			for y_value in pixel_trajectory
 				println(file, y_value)
@@ -655,10 +655,10 @@ PlutoUI.TableOfContents(title="WideField images analysis", indent=true)
 # ╠═b3fafc65-d893-43e9-9818-021e60f85b77
 # ╟─78f03196-450c-4c51-afc3-5a664b81fef3
 # ╟─737287f7-f3a5-454b-9b02-0d87ed5d2f8b
-# ╠═5b03b13c-a813-4916-b13e-08413b370670
+# ╠═854a1826-13de-4a80-883f-675413a630a6
+# ╟─5b03b13c-a813-4916-b13e-08413b370670
 # ╟─d1a0bd8f-f373-4df5-824a-254460657f79
 # ╟─1ba10129-eb26-443e-b436-d72cf28e3793
-# ╠═4c3c55ac-3ab2-442c-9e7f-8aed53a6a874
 # ╟─75ea8ed5-4bc0-41f1-9b18-c3e4ad8f1b83
 # ╟─40d8b473-96c1-4952-afe8-583cabcb2e7c
 # ╟─18231a39-2bd9-4bef-b443-05f7261acb88
@@ -667,6 +667,8 @@ PlutoUI.TableOfContents(title="WideField images analysis", indent=true)
 # ╟─ba6ed8fe-b97b-41b8-9e10-ea0e85aa50ab
 # ╟─95c930a5-84ba-4670-a0b9-ab145751ad0a
 # ╟─43dc348a-3896-4e48-b4eb-44983f200006
+# ╟─4ed4288f-d077-4fd0-af75-29a4d823f254
+# ╟─5481b4eb-bd28-4700-ad34-7c425c08b014
 # ╟─3bc06e36-0692-4f85-83f8-a1a38c0d9ace
 # ╠═fd5dc8fa-3a84-4e1e-98ae-b6c2020223ea
 # ╠═6adf724f-73ad-424d-a0cb-2869ce73c3d8
@@ -677,7 +679,6 @@ PlutoUI.TableOfContents(title="WideField images analysis", indent=true)
 # ╟─db148fe2-143a-49f1-a4bc-10cf7599ea01
 # ╠═0bef7c1e-c14d-4455-951b-d30e206dbdfb
 # ╟─34a8690e-8ccd-4b4a-8547-b6b73ead33a9
-# ╟─bdc51e2e-21e9-404d-84de-bd776192ecae
 # ╠═4896bcfe-fc29-4343-9433-7729dd70d2d0
 # ╠═073859fe-d83d-40bb-8cdb-ec1850e8ed1b
 # ╠═a9570315-f705-4c41-8309-52d2ad8e0d9f
@@ -697,7 +698,6 @@ PlutoUI.TableOfContents(title="WideField images analysis", indent=true)
 # ╠═dfe9dbd4-6175-4a54-baf4-bfcb746d127f
 # ╠═d9240721-f5cd-43c8-bb29-8454a660643f
 # ╟─ca58450a-8f5b-4b48-8dff-f370a7d640f9
-# ╟─736e550f-31ad-403f-b745-9c8b57c99f73
 # ╠═2f4b2a85-0aba-41ac-8c15-f9fafa26f35b
 # ╠═da4e08b8-b89e-4b70-8ef7-11dcecd18863
 # ╠═9af3cd4e-a16c-4f09-949d-5ac515e2f327
