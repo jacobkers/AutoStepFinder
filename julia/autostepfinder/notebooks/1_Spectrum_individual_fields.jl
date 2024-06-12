@@ -41,33 +41,73 @@ This program calculates the intensity received by the CMOS camera when a sample 
 
 # ╔═╡ afa580a1-e05d-4b8e-889b-58efd9c9fefb
 md"""
-## Set the working directory (sample and field n) and exposure (s)
+## Set the working directory and exposure
+"""
+
+# ╔═╡ 43e68012-f4f5-48d8-a38a-9e21d4bfa5d3
+md"""
+Select the loaction of the SAMPLE to study (not the field):
 """
 
 # ╔═╡ df68d895-b454-4938-8d3f-0d96d5688d7e
 begin
-	folder_data = raw"C:\Users\Alfonso\BOLD\WideField\Data\april_2024\55\Spectrum\Field1"
-	exposure_time = 0.5 #In seconds, for each filter
+	folder_sample = raw"C:\Users\Alfonso\BOLD\WideField\Data\april_2024\55_2"
 end;
+
+# ╔═╡ a02b6cc7-eb55-48b6-96f9-22c0d70f1c5c
+begin
+	filenames_all = readdir(joinpath(folder_sample, "Spectrum"))
+	filenames_filtered = filter(filename -> startswith(filename, "Field"), filenames_all)
+end;
+
+# ╔═╡ 27ed7df7-4c88-4b68-afee-1a39c1ff4222
+md"""
+Select the FIELD to analyze from the list:
+"""
+
+# ╔═╡ 6b308d30-0d5f-4184-9836-72438aebe1c1
+@bind field_number Select(filenames_filtered)
+
+# ╔═╡ a85ef4be-1155-4d77-a160-ebe7375e5fc9
+md"""
+Introduce the exposure time for the spectra (exposure time per filter in SECONDS):
+"""
+
+# ╔═╡ 37208205-e4a9-4b7f-8e43-98a3f02778a5
+@bind exposure_time_string TextField(default = "0.5")
 
 # ╔═╡ 2fb14587-7ab5-4179-a2c4-b3d0081229a4
 md"""Check to store the results in the folder: $(@bind store_results CheckBox())"""
 
 # ╔═╡ e2958294-7734-4923-93c6-718c9e19327b
 md"""
-Check to perform independent analysis of background (for testing): $(@bind background_analysis CheckBox())
+Check to perform independent analysis of background (use only for testing): $(@bind background_analysis CheckBox())
 """
+
+# ╔═╡ da468a8d-9dbd-48eb-a23c-88b0c3aab6db
+md"""
+### Select the ROI
+"""
+
+# ╔═╡ 79a6d6bc-1ced-421e-8a8a-bc10943f7131
+roi = [170, 270, 190, 290];
 
 # ╔═╡ 5da7fc25-0962-47c7-aec5-8ecfaae1a2a3
 md"""
 ##### Creation of the results folder (if not existent)
 """
 
+# ╔═╡ a26427cb-8436-420c-9614-b0bd76c900c7
+begin
+	folder_data = joinpath(folder_sample, "Spectrum", field_number)
+	exposure_time = parse(Float64, exposure_time_string)
+end;
+
 # ╔═╡ a46802e1-63cf-4471-a3d7-129e995c3c56
 if store_results
 	results_folder_name = joinpath(dirname(folder_data), "Analysis_AYN")
 	if isdir(results_folder_name)
-		print("Common directory already exists")
+		println("Common directory already exists")
 	else
 		try
 			mkdir(results_folder_name)
@@ -78,7 +118,7 @@ if store_results
 	end
 	results_folder_name_field = joinpath(results_folder_name, basename(folder_data))
 	if isdir(results_folder_name_field)
-		print("Directory for field already exists")
+		println("Directory for field already exists")
 	else
 		try
 			mkdir(results_folder_name_field)
@@ -147,7 +187,6 @@ md"""
 
 # ╔═╡ 0bec5a9e-6510-453d-863a-e21341a0645a
 begin
-	field_number = basename(folder_data)
 	filenames = readdir(folder_data)
 	folder_background = joinpath(folder_data, "Background")
 	background_filenames = readdir(folder_background)
@@ -163,14 +202,11 @@ end;
 
 # ╔═╡ b65cf2a2-b85a-482c-872f-84c894908b18
 md"""
-##### Selection of ROI with white light frame
+##### Creation of spectrum and ROI zoom
 """
 
 # ╔═╡ 1a31138b-f047-4694-a69f-a5cdaf56b2f1
 #CONVERSION FROM PX TO LENGTH UNITS WOULD BE GREAT
-
-# ╔═╡ 32255741-d854-4fe3-b0be-e096da249ee9
-roi = [170, 270, 190, 290];
 
 # ╔═╡ 1c9d6617-47c0-4631-abbc-d7a5cfc90534
 if store_results
@@ -212,13 +248,7 @@ function Get_Image(folder, frame_name)
 	return image_array
 end
 
-# ╔═╡ 90361bfd-7c3d-4f7c-b413-996f77185447
-if background_analysis
-	imgbkg = Get_Image(folder_background, background_white_light)
-	heatmap(imgbkg, c=:inferno, aspect_ratio=:equal, yflip=false, size=(600, 600))
-end
-
-# ╔═╡ 03610c5d-9007-4184-baab-91bba5e552d7
+# ╔═╡ 4391085f-4b8b-4929-9a00-d57990261f37
 begin
 	figure_heatmap_full = "heatmap_full.png"
 	img = Get_Image(folder_data, image_white_light)
@@ -231,7 +261,7 @@ if store_results
 	savefig(joinpath(results_folder_name_field, figure_heatmap_full))
 end;
 
-# ╔═╡ 03e725f5-6508-43e3-8e03-47944b4365b6
+# ╔═╡ 85c7843b-5ee6-4120-af20-7be2eea8ec2f
 begin
 	figure_heatmap_roi = "heatmap_ROI.png"
 	heatmap(img[roi[3]:roi[4], roi[1]:roi[2]], c=:inferno, aspect_ratio=:equal, yflip=false, size=(350, 350), title=field_number*" ROI", titlefontsize = 12, label=false, widen=false, tickdirection=:out, margin=5mm)
@@ -241,6 +271,12 @@ end
 if store_results
 	savefig(joinpath(results_folder_name_field, figure_heatmap_roi))
 end;
+
+# ╔═╡ 90361bfd-7c3d-4f7c-b413-996f77185447
+if background_analysis
+	imgbkg = Get_Image(folder_background, background_white_light)
+	heatmap(imgbkg, c=:inferno, aspect_ratio=:equal, yflip=false, size=(600, 600))
+end
 
 # ╔═╡ a8a5cc7c-74f8-4833-bd6f-f1047f892c5f
 if background_analysis
@@ -310,10 +346,20 @@ PlutoUI.TableOfContents(title="WideField images analysis", indent=true)
 # ╠═54dcc270-008c-11ef-1c5a-f33cdd664b5d
 # ╠═f7e7aa83-1e2e-420d-9227-1fe1c477766f
 # ╟─afa580a1-e05d-4b8e-889b-58efd9c9fefb
+# ╟─43e68012-f4f5-48d8-a38a-9e21d4bfa5d3
 # ╠═df68d895-b454-4938-8d3f-0d96d5688d7e
+# ╟─a02b6cc7-eb55-48b6-96f9-22c0d70f1c5c
+# ╟─27ed7df7-4c88-4b68-afee-1a39c1ff4222
+# ╟─6b308d30-0d5f-4184-9836-72438aebe1c1
+# ╟─a85ef4be-1155-4d77-a160-ebe7375e5fc9
+# ╟─37208205-e4a9-4b7f-8e43-98a3f02778a5
 # ╟─2fb14587-7ab5-4179-a2c4-b3d0081229a4
 # ╟─e2958294-7734-4923-93c6-718c9e19327b
+# ╟─da468a8d-9dbd-48eb-a23c-88b0c3aab6db
+# ╠═79a6d6bc-1ced-421e-8a8a-bc10943f7131
+# ╟─4391085f-4b8b-4929-9a00-d57990261f37
 # ╟─5da7fc25-0962-47c7-aec5-8ecfaae1a2a3
+# ╠═a26427cb-8436-420c-9614-b0bd76c900c7
 # ╠═a46802e1-63cf-4471-a3d7-129e995c3c56
 # ╟─1309ae2a-2941-4f7e-b920-1bf5ed1dd7da
 # ╠═891d150a-7f46-4cfe-966a-fdb2ddae76cf
@@ -327,12 +373,10 @@ PlutoUI.TableOfContents(title="WideField images analysis", indent=true)
 # ╠═90361bfd-7c3d-4f7c-b413-996f77185447
 # ╟─b65cf2a2-b85a-482c-872f-84c894908b18
 # ╠═1a31138b-f047-4694-a69f-a5cdaf56b2f1
-# ╠═32255741-d854-4fe3-b0be-e096da249ee9
 # ╠═1c9d6617-47c0-4631-abbc-d7a5cfc90534
-# ╠═03610c5d-9007-4184-baab-91bba5e552d7
 # ╠═a8a5cc7c-74f8-4833-bd6f-f1047f892c5f
 # ╠═7d1b9dd9-4b1e-43e6-ba1a-9ec4ea76b8cd
-# ╠═03e725f5-6508-43e3-8e03-47944b4365b6
+# ╠═85c7843b-5ee6-4120-af20-7be2eea8ec2f
 # ╠═76dab4f4-c22f-48e1-9ebb-04ee35669dff
 # ╠═f2c09158-1187-4239-bc3e-be0ab2ca55ea
 # ╠═43dd9792-7c8a-4846-b8f8-8b7f1d8a5224

@@ -37,7 +37,7 @@ md"""
 
 # ╔═╡ 297b76bb-abd1-4fff-848a-3a2a3f39ee38
 md"""
-This program takes the results from the notebook "Spectrum\_individual\_fields", combines all the spectra of the different fields in the same sample and does the combined analysis and plots for each sample
+This program takes the results from the notebooks "Spectrum\_individual\_fields" and "PhotoBleaching", and does the combined analysis of results extracted from them. In particular, this notebook combines all the spectra of the different fields in the same sample and generates the combined plots for that sample. Same applies for the PB curves
 """
 
 # ╔═╡ 0779c935-6d5c-4f4b-9590-89027b39fe67
@@ -97,6 +97,9 @@ md"""
 md"""
 # TO DO
 """
+
+# ╔═╡ 6a1ba57a-859f-402d-b6ac-0919274a9bf9
+#Add common analysis for PB curves
 
 # ╔═╡ 61999d4f-30d5-4bb3-92bc-8de8a15b9bc9
 md"""
@@ -196,6 +199,7 @@ PlutoUI.TableOfContents(title="WideField images analysis", indent=true)
 # ╠═fb1e75a1-0ef2-4c93-ba59-a0fbcb3c8619
 # ╠═39edb00a-1b35-4ffd-a9b4-1a271723c67f
 # ╟─a2c19a14-d58a-4635-b3c1-262b0ad47ba8
+# ╠═6a1ba57a-859f-402d-b6ac-0919274a9bf9
 # ╟─61999d4f-30d5-4bb3-92bc-8de8a15b9bc9
 # ╟─cc1905c7-7172-4dd8-9237-d9ea2214b56d
 # ╟─5dbcd6b1-47c4-4d68-b52a-2eddf1aa452b
