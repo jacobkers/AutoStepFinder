@@ -1,0 +1,16 @@
+name = "autostepfinder"
+uuid = "f741c903-2544-42f5-8653-cb0b56327c36"
+authors = ["proscrite <pablogfr94@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+FixedPointNumbers = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+ImageView = "86fae568-95e7-573e-a6b2-d8a6b900c9ef"
+Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
